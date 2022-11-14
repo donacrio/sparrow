@@ -1,6 +1,6 @@
 [workspace]
 
-members = ["sparrow-core"]
+members = ["sparrow", "sparrow-core"]
 
 [profile.dev]
 opt-level = 0
