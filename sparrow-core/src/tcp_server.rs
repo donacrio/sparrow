@@ -1,5 +1,4 @@
 use std::{
-  hash::Hash,
   io::{self, BufRead, BufReader, Write},
   net::{TcpListener, TcpStream},
   str::FromStr,
@@ -8,15 +7,13 @@ use std::{
 use crate::{
   command::{self, Command},
   storage::{Storage, StorageEnum},
+  traits,
 };
 
-pub fn run_tcp_server<Key, Value>(
-  addr: &str,
-  mut storage: StorageEnum<Key, Value>,
-) -> Result<(), io::Error>
+pub fn run_tcp_server<K, V>(addr: &str, mut storage: StorageEnum<K, V>) -> Result<(), io::Error>
 where
-  Key: FromStr + ToString + Eq + Hash,
-  Value: FromStr + ToString,
+  K: traits::StorageKey,
+  V: traits::StorageValue,
 {
   let listener = TcpListener::bind(addr)?;
 
@@ -33,13 +30,13 @@ where
   Ok(())
 }
 
-fn handle_connection<Key, Value>(
+fn handle_connection<K, V>(
   mut stream: TcpStream,
-  storage: &mut StorageEnum<Key, Value>,
+  storage: &mut StorageEnum<K, V>,
 ) -> Result<(), io::Error>
 where
-  Key: FromStr + ToString + Eq + Hash,
-  Value: FromStr + ToString,
+  K: traits::StorageKey,
+  V: traits::StorageValue,
 {
   let buf_reader = BufReader::new(&mut stream);
   let request: Vec<String> = buf_reader
@@ -69,13 +66,13 @@ where
   Ok(())
 }
 
-fn handle_request<Key, Value>(
+fn handle_request<K, V>(
   request: String,
-  storage: &mut StorageEnum<Key, Value>,
-) -> Result<String, command::Error<Key, Value>>
+  storage: &mut StorageEnum<K, V>,
+) -> Result<String, command::Error<K, V>>
 where
-  Key: FromStr + ToString + Eq + Hash,
-  Value: FromStr + ToString,
+  K: traits::StorageKey,
+  V: traits::StorageValue,
 {
   match Command::from_str(&request)? {
     Command::Get(key) => Ok(
