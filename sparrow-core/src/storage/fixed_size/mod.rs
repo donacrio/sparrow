@@ -1,6 +1,9 @@
-use crate::traits;
+mod error;
 
-use super::Storage;
+pub use self::error::FixedSizeStorageError;
+
+use super::{error::StorageError, Storage};
+use crate::traits;
 use std::collections::HashMap;
 
 pub struct FixedSizeStorage<K, V> {
@@ -29,12 +32,11 @@ where
     self.map.get(&key)
   }
 
-  fn put(&mut self, key: K, value: V) -> Result<(), &str> {
+  fn put(&mut self, key: K, value: V) -> Result<Option<V>, StorageError> {
     if self.map.keys().count() < self.capacity || self.map.contains_key(&key) {
-      self.map.insert(key, value);
-      return Ok(());
+      return Ok(self.map.insert(key, value));
     }
-    Err("Storage is full")
+    Err(FixedSizeStorageError::Full.into())
   }
 
   fn delete(&mut self, key: K) -> Option<V> {
@@ -92,7 +94,7 @@ mod test {
   fn test_put(mut storage: FixedSizeStorage<K, V>) {
     assert_eq!(storage.get(1), None);
     let result = storage.put(1, 1);
-    assert_eq!(result, Ok(()));
+    assert_eq!(result, Ok(None));
     assert_eq!(storage.get(1), Some(&1));
   }
 
@@ -100,14 +102,14 @@ mod test {
   fn test_put_full_key_exists(mut storage_full: FixedSizeStorage<K, V>) {
     assert_eq!(storage_full.get(TEST_KEY_0), Some(&TEST_VALUE_0));
     let result = storage_full.put(TEST_KEY_0, TEST_VALUE_1);
-    assert_eq!(result, Ok(()));
+    assert_eq!(result, Ok(Some(TEST_VALUE_0)));
     assert_eq!(storage_full.get(TEST_KEY_0), Some(&TEST_VALUE_1));
   }
 
   #[rstest]
   fn test_put_full_key_absent(mut storage_full: FixedSizeStorage<K, V>) {
     let result = storage_full.put(5, 5);
-    assert_eq!(result, Err("Storage is full"));
+    assert_eq!(result, Err(FixedSizeStorageError::Full.into()));
   }
 
   #[rstest]

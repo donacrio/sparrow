@@ -1,15 +1,17 @@
+mod error;
 mod fixed_size;
 
 use crate::traits;
 
+use self::error::StorageError;
 pub use self::fixed_size::FixedSizeStorage;
 
 pub enum StorageEnum<K, V> {
-  FixedSizeStorage(FixedSizeStorage<K, V>),
+  FixedSize(FixedSizeStorage<K, V>),
 }
 
 pub enum StorageType {
-  FixedSizeStorage,
+  FixedSize,
 }
 
 pub fn create_storage<K, V>(storage_type: StorageType, capacity: usize) -> StorageEnum<K, V>
@@ -17,9 +19,7 @@ where
   K: traits::StorageKey,
 {
   match storage_type {
-    StorageType::FixedSizeStorage => {
-      StorageEnum::FixedSizeStorage(FixedSizeStorage::<K, V>::new(capacity))
-    }
+    StorageType::FixedSize => StorageEnum::FixedSize(FixedSizeStorage::<K, V>::new(capacity)),
   }
 }
 
@@ -29,7 +29,7 @@ where
   V: traits::StorageValue,
 {
   fn get(&self, key: K) -> Option<&V>;
-  fn put(&mut self, key: K, value: V) -> Result<(), &str>;
+  fn put(&mut self, key: K, value: V) -> Result<Option<V>, StorageError>;
   fn delete(&mut self, key: K) -> Option<V>;
 }
 
@@ -40,19 +40,19 @@ where
 {
   fn get(&self, key: K) -> Option<&V> {
     match self {
-      Self::FixedSizeStorage(inner) => inner.get(key),
+      Self::FixedSize(inner) => inner.get(key),
     }
   }
 
-  fn put(&mut self, key: K, value: V) -> Result<(), &str> {
+  fn put(&mut self, key: K, value: V) -> Result<Option<V>, StorageError> {
     match self {
-      Self::FixedSizeStorage(inner) => inner.put(key, value),
+      Self::FixedSize(inner) => inner.put(key, value),
     }
   }
 
   fn delete(&mut self, key: K) -> Option<V> {
     match self {
-      Self::FixedSizeStorage(inner) => inner.delete(key),
+      Self::FixedSize(inner) => inner.delete(key),
     }
   }
 }

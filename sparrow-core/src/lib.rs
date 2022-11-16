@@ -11,6 +11,6 @@ impl traits::StorageKey for i32 {}
 impl traits::StorageValue for i32 {}
 
 pub fn run(capacity: usize, addr: &str) -> Result<(), std::io::Error> {
-  let storage: StorageEnum<i32, i32> = create_storage(StorageType::FixedSizeStorage, capacity);
+  let storage: StorageEnum<i32, i32> = create_storage(StorageType::FixedSize, capacity);
   run_tcp_server(addr, storage)
 }
