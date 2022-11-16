@@ -49,3 +49,5 @@ where
     .ok_or_else(|| CommandError::Malformed("Missing parameter".to_owned()))?
     .map_err(|_| CommandError::Malformed("Cannot parse parameter".to_owned()))
 }
+
+// TODO: add tests
