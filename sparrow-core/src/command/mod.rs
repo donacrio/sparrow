@@ -32,9 +32,9 @@ where
           let key = parse_parameter(&mut split)?;
           Ok(Command::Delete(key))
         }
-        _ => Err(CommandError::NotFound),
+        unknown => Err(CommandError::NotFound(unknown.to_owned())),
       },
-      None => Err(CommandError::Malformed),
+      None => Err(CommandError::Malformed("No command provided".to_owned())),
     }
   }
 }
@@ -46,6 +46,6 @@ where
   split
     .next()
     .map(|param| param.parse())
-    .ok_or(CommandError::Malformed)?
-    .map_err(|_| CommandError::Malformed)
+    .ok_or_else(|| CommandError::Malformed("Missing parameter".to_owned()))?
+    .map_err(|_| CommandError::Malformed("Cannot parse parameter".to_owned()))
 }
