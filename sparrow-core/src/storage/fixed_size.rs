@@ -1,4 +1,4 @@
-use super::Cache;
+use super::Storage;
 use std::{collections::HashMap, hash::Hash};
 
 pub struct FixedSizeStorage<Key, Value> {
@@ -18,7 +18,7 @@ where
   }
 }
 
-impl<Key, Value> Cache<Key, Value> for FixedSizeStorage<Key, Value>
+impl<Key, Value> Storage<Key, Value> for FixedSizeStorage<Key, Value>
 where
   Key: Eq + Hash,
 {
