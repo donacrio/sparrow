@@ -10,3 +10,11 @@ impl From<FixedSizeStorageError> for StorageError {
     Self::FixedSize(err)
   }
 }
+
+impl std::fmt::Display for StorageError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      StorageError::FixedSize(err) => write!(f, "FixedSizeStorageError: {}", err),
+    }
+  }
+}
