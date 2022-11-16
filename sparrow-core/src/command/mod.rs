@@ -1,8 +1,7 @@
 mod error;
 
 pub use self::error::CommandError;
-use std::str::FromStr;
-
+use std::str::{FromStr, Split};
 pub enum Command<Key, Value> {
   Get(Key),
   Put(Key, Value),
@@ -21,32 +20,16 @@ where
     match split.next() {
       Some(command) => match command {
         "GET" => {
-          let key = split
-            .next()
-            .map(|key| key.parse())
-            .ok_or(CommandError::Malformed)?
-            .map_err(|_| CommandError::Malformed)?;
+          let key = parse_parameter(&mut split)?;
           Ok(Command::Get(key))
         }
         "PUT" => {
-          let key = split
-            .next()
-            .map(|key| key.parse())
-            .ok_or(CommandError::Malformed)?
-            .map_err(|_| CommandError::Malformed)?;
-          let value = split
-            .next()
-            .map(|value| value.parse())
-            .ok_or(CommandError::Malformed)?
-            .map_err(|_| CommandError::Malformed)?;
+          let key = parse_parameter(&mut split)?;
+          let value = parse_parameter(&mut split)?;
           Ok(Command::Put(key, value))
         }
         "DEL" => {
-          let key = split
-            .next()
-            .map(|key| key.parse())
-            .ok_or(CommandError::Malformed)?
-            .map_err(|_| CommandError::Malformed)?;
+          let key = parse_parameter(&mut split)?;
           Ok(Command::Delete(key))
         }
         _ => Err(CommandError::NotFound),
@@ -54,4 +37,15 @@ where
       None => Err(CommandError::Malformed),
     }
   }
+}
+
+fn parse_parameter<T>(split: &mut Split<char>) -> Result<T, CommandError>
+where
+  T: FromStr,
+{
+  split
+    .next()
+    .map(|param| param.parse())
+    .ok_or(CommandError::Malformed)?
+    .map_err(|_| CommandError::Malformed)
 }
