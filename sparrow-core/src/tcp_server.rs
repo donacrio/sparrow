@@ -1,16 +1,16 @@
+use crate::{
+  command::Command,
+  error::Result,
+  storage::{Storage, StorageEnum},
+  traits,
+};
 use std::{
-  io::{self, BufRead, BufReader, Write},
+  io::{BufRead, BufReader, Write},
   net::{TcpListener, TcpStream},
   str::FromStr,
 };
 
-use crate::{
-  command::{self, Command},
-  storage::{Storage, StorageEnum},
-  traits,
-};
-
-pub fn run_tcp_server<K, V>(addr: &str, mut storage: StorageEnum<K, V>) -> Result<(), io::Error>
+pub fn run_tcp_server<K, V>(addr: &str, mut storage: StorageEnum<K, V>) -> Result<()>
 where
   K: traits::StorageKey,
   V: traits::StorageValue,
@@ -20,8 +20,9 @@ where
   for stream in listener.incoming() {
     match stream {
       Ok(stream) => {
-        if let Err(err) = handle_connection(stream, &mut storage) {
-          eprintln!("{}", err);
+        if handle_connection(stream, &mut storage).is_err() {
+          //TODO: Implement Display for errors
+          eprintln!("an error occured");
         }
       }
       Err(err) => eprintln!("{}", err),
@@ -30,10 +31,7 @@ where
   Ok(())
 }
 
-fn handle_connection<K, V>(
-  mut stream: TcpStream,
-  storage: &mut StorageEnum<K, V>,
-) -> Result<(), io::Error>
+fn handle_connection<K, V>(mut stream: TcpStream, storage: &mut StorageEnum<K, V>) -> Result<()>
 where
   K: traits::StorageKey,
   V: traits::StorageValue,
@@ -66,10 +64,7 @@ where
   Ok(())
 }
 
-fn handle_request<K, V>(
-  request: String,
-  storage: &mut StorageEnum<K, V>,
-) -> Result<String, command::Error<K, V>>
+fn handle_request<K, V>(request: String, storage: &mut StorageEnum<K, V>) -> Result<String>
 where
   K: traits::StorageKey,
   V: traits::StorageValue,
@@ -82,8 +77,8 @@ where
     ),
     Command::Put(key, value) => storage
       .put(key, value)
-      .map(|_| "OK".to_owned())
-      .map_err(|_| command::Error::NotFound),
+      .map(|value| value.map_or("None".to_owned(), |value| value.to_string()))
+      .map_err(|err| err.into()),
     Command::Delete(key) => Ok(
       storage
         .delete(key)
