@@ -1,3 +1,6 @@
+mod error;
+
+pub use self::error::CommandError;
 use std::str::FromStr;
 
 pub enum Command<Key, Value> {
@@ -6,23 +9,12 @@ pub enum Command<Key, Value> {
   Delete(Key),
 }
 
-pub enum Error<Key, Value>
-where
-  Key: FromStr,
-  Value: FromStr,
-{
-  NotFound,
-  Malformed,
-  ParseKey(<Key as FromStr>::Err),
-  ParseValue(<Value as FromStr>::Err),
-}
-
 impl<Key, Value> FromStr for Command<Key, Value>
 where
   Key: FromStr,
   Value: FromStr,
 {
-  type Err = Error<Key, Value>;
+  type Err = CommandError;
 
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     let mut split = s.split(' ');
@@ -32,34 +24,34 @@ where
           let key = split
             .next()
             .map(|key| key.parse())
-            .ok_or(Error::Malformed)?
-            .map_err(|err| Error::ParseKey(err))?;
+            .ok_or(CommandError::Malformed)?
+            .map_err(|_| CommandError::Malformed)?;
           Ok(Command::Get(key))
         }
         "PUT" => {
           let key = split
             .next()
             .map(|key| key.parse())
-            .ok_or(Error::Malformed)?
-            .map_err(|err| Error::ParseKey(err))?;
+            .ok_or(CommandError::Malformed)?
+            .map_err(|_| CommandError::Malformed)?;
           let value = split
             .next()
             .map(|value| value.parse())
-            .ok_or(Error::Malformed)?
-            .map_err(|err| Error::ParseValue(err))?;
+            .ok_or(CommandError::Malformed)?
+            .map_err(|_| CommandError::Malformed)?;
           Ok(Command::Put(key, value))
         }
         "DEL" => {
           let key = split
             .next()
             .map(|key| key.parse())
-            .ok_or(Error::Malformed)?
-            .map_err(|err| Error::ParseKey(err))?;
+            .ok_or(CommandError::Malformed)?
+            .map_err(|_| CommandError::Malformed)?;
           Ok(Command::Delete(key))
         }
-        _ => Err(Error::NotFound),
+        _ => Err(CommandError::NotFound),
       },
-      None => Err(Error::Malformed),
+      None => Err(CommandError::Malformed),
     }
   }
 }

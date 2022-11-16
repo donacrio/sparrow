@@ -1,10 +1,9 @@
 mod error;
 mod fixed_size;
 
-use crate::traits;
-
-use self::error::StorageError;
+pub use self::error::StorageError;
 pub use self::fixed_size::FixedSizeStorage;
+use crate::traits;
 
 pub enum StorageEnum<K, V> {
   FixedSize(FixedSizeStorage<K, V>),
