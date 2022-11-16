@@ -20,9 +20,8 @@ where
   for stream in listener.incoming() {
     match stream {
       Ok(stream) => {
-        if handle_connection(stream, &mut storage).is_err() {
-          //TODO: Implement Display for errors
-          eprintln!("an error occured");
+        if let Err(err) = handle_connection(stream, &mut storage) {
+          eprintln!("{}", err);
         }
       }
       Err(err) => eprintln!("{}", err),
