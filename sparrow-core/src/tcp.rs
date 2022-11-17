@@ -44,7 +44,7 @@ where
     .into_iter()
     .map(|request| match handle_request(request) {
       Ok(response) => response,
-      Err(_) => "Error".to_owned(),
+      Err(err) => err.to_string(),
     })
     .collect();
 
