@@ -47,7 +47,7 @@ where
 #[cfg(test)]
 mod test {
   use super::*;
-  use rstest::{fixture, rstest};
+  use rstest::fixture;
 
   type K = i32;
   type V = i32;
@@ -80,42 +80,72 @@ mod test {
     assert_eq!(storage.map.len(), 0);
   }
 
-  #[rstest]
-  fn test_get_key_exists(storage: FixedSizeStorage<K, V>) {
-    assert_eq!(storage.get(TEST_KEY_0), Some(&TEST_VALUE_0));
+  mod get {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    fn key_exists(storage: FixedSizeStorage<K, V>) {
+      assert_eq!(storage.get(TEST_KEY_0), Some(&TEST_VALUE_0));
+    }
+
+    #[rstest]
+    fn key_absent(storage: FixedSizeStorage<K, V>) {
+      assert_eq!(storage.get(TEST_KEY_1), None);
+    }
   }
 
-  #[rstest]
-  fn test_get_key_absent(storage: FixedSizeStorage<K, V>) {
-    assert_eq!(storage.get(TEST_KEY_1), None);
+  mod put {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    fn key_exists(mut storage: FixedSizeStorage<K, V>) {
+      assert_eq!(storage.get(TEST_KEY_0), Some(&TEST_VALUE_0));
+      let result = storage.put(TEST_KEY_0, TEST_VALUE_1);
+      assert_eq!(result, Ok(Some(TEST_VALUE_0)));
+      assert_eq!(storage.get(TEST_KEY_0), Some(&TEST_VALUE_1));
+    }
+
+    #[rstest]
+    fn key_exists_storage_full(mut storage_full: FixedSizeStorage<K, V>) {
+      assert_eq!(storage_full.get(TEST_KEY_0), Some(&TEST_VALUE_0));
+      let result = storage_full.put(TEST_KEY_0, TEST_VALUE_1);
+      assert_eq!(result, Ok(Some(TEST_VALUE_0)));
+      assert_eq!(storage_full.get(TEST_KEY_0), Some(&TEST_VALUE_1));
+    }
+
+    #[rstest]
+    fn key_absent(mut storage: FixedSizeStorage<K, V>) {
+      assert_eq!(storage.get(1), None);
+      let result = storage.put(1, 1);
+      assert_eq!(result, Ok(None));
+      assert_eq!(storage.get(1), Some(&1));
+    }
+
+    #[rstest]
+    fn key_absent_storage_full(mut storage_full: FixedSizeStorage<K, V>) {
+      assert_eq!(storage_full.get(5), None);
+      let result = storage_full.put(5, 5);
+      assert_eq!(result, Err(FixedSizeStorageError::Full.into()));
+    }
   }
 
-  #[rstest]
-  fn test_put(mut storage: FixedSizeStorage<K, V>) {
-    assert_eq!(storage.get(1), None);
-    let result = storage.put(1, 1);
-    assert_eq!(result, Ok(None));
-    assert_eq!(storage.get(1), Some(&1));
-  }
+  mod delete {
+    use super::*;
+    use rstest::rstest;
 
-  #[rstest]
-  fn test_put_full_key_exists(mut storage_full: FixedSizeStorage<K, V>) {
-    assert_eq!(storage_full.get(TEST_KEY_0), Some(&TEST_VALUE_0));
-    let result = storage_full.put(TEST_KEY_0, TEST_VALUE_1);
-    assert_eq!(result, Ok(Some(TEST_VALUE_0)));
-    assert_eq!(storage_full.get(TEST_KEY_0), Some(&TEST_VALUE_1));
-  }
+    #[rstest]
+    fn key_exists(mut storage: FixedSizeStorage<K, V>) {
+      assert_eq!(storage.get(TEST_KEY_0), Some(&TEST_VALUE_0));
+      assert_eq!(storage.delete(TEST_KEY_0), Some(TEST_VALUE_0));
+      assert_eq!(storage.get(TEST_KEY_0), None);
+    }
 
-  #[rstest]
-  fn test_put_full_key_absent(mut storage_full: FixedSizeStorage<K, V>) {
-    let result = storage_full.put(5, 5);
-    assert_eq!(result, Err(FixedSizeStorageError::Full.into()));
-  }
-
-  #[rstest]
-  fn test_delete(mut storage: FixedSizeStorage<K, V>) {
-    assert_eq!(storage.get(TEST_KEY_0), Some(&TEST_VALUE_0));
-    storage.delete(TEST_KEY_0);
-    assert_eq!(storage.get(TEST_KEY_0), None);
+    #[rstest]
+    fn key_absent(mut storage: FixedSizeStorage<K, V>) {
+      assert_eq!(storage.get(TEST_KEY_1), None);
+      assert_eq!(storage.delete(TEST_KEY_1), None);
+    }
   }
 }
